@@ -75,7 +75,7 @@ def integrate_images(content: str, featured_image: str, image1: str, image2: str
     img_featured = soup.new_tag('img', 
                                src=featured_url if featured_url else featured_image,
                                alt="Featured Image", 
-                               style="height: 800px;")
+                               style="height: 800px;display: block; margin: auto;")
     first_p = soup.find('p')
     if first_p:
         first_p.insert_before(img_featured)
@@ -97,13 +97,13 @@ def integrate_images(content: str, featured_image: str, image1: str, image2: str
         img_1 = soup.new_tag('img',
                             src=image1_url if image1_url else image1,
                             alt="Image 1",
-                            style="height: 800px;")
+                            style="height: 800px;display: block; margin: auto;")
         last_h2_before_fifty.insert_before(img_1)
     if last_p_before_eighty and image2:
         img_2 = soup.new_tag('img',
                             src=image2_url if image2_url else image2,
                             alt="Image 2",
-                            style="height:800px;")
+                            style="height:800px;display: block; margin: auto;")
         if last_p_before_eighty.next_sibling:
             last_p_before_eighty.insert_after(img_2)
         else:
