@@ -79,7 +79,7 @@ def integrate_images(content: str, featured_image: str, image1: str, image2: str
     img_featured = soup.new_tag('img', 
                                src=featured_url if featured_url else featured_image,
                                alt="Featured Image", 
-                               style="height: 50%")
+                               style="height: 550px;")
     first_p = soup.find('p')
     if first_p:
         first_p.insert_before(img_featured)
