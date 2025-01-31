@@ -5,10 +5,6 @@ from requests.auth import HTTPBasicAuth
 import json
 from bs4 import BeautifulSoup
 from typing import Optional
-import logging
-
-logger = logging.getLogger('uvicorn.error')
-logger.setLevel(logging.DEBUG)
 
 app = FastAPI(title="WordPress Post Creator API")
 
