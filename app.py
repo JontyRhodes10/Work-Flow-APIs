@@ -68,10 +68,6 @@ def integrate_images(content: str, featured_image: str, image1: str, image2: str
     image1_url = get_image_url(image1, api_key)
     image2_url = get_image_url(image2, api_key)
     soup = BeautifulSoup(content, 'html.parser')
-    text_content = soup.get_text()
-    total_length = len(text_content)
-    fifty_percent_point = int(total_length * 0.5)
-    eighty_percent_point = int(total_length * 0.8)
     img_featured = soup.new_tag('img', 
                                src=featured_url if featured_url else featured_image,
                                alt="Featured Image", 
@@ -84,30 +80,19 @@ def integrate_images(content: str, featured_image: str, image1: str, image2: str
             soup.body.insert(0, img_featured)
         else:
             soup.insert(0, img_featured)
-    current_length = 0
-    last_h2_before_fifty = None
-    last_p_before_eighty = None
-    for tag in soup.find_all(['p', 'h2']):
-        current_length += len(tag.get_text())
-        if current_length <= fifty_percent_point and tag.name == 'h2':
-            last_h2_before_fifty = tag
-        if current_length <= eighty_percent_point and tag.name == 'p':
-            last_p_before_eighty = tag
-    if last_h2_before_fifty and image1:
+    h2_tags = soup.find_all('h2')
+    if len(h2_tags) >= 4 and image1:
         img_1 = soup.new_tag('img',
                             src=image1_url if image1_url else image1,
                             alt="Image 1",
                             style="height: 800px;display: block; margin: auto;")
-        last_h2_before_fifty.insert_before(img_1)
-    if last_p_before_eighty and image2:
+        h2_tags[3].insert_before(img_1)
+    if len(h2_tags) > 0 and image2:
         img_2 = soup.new_tag('img',
                             src=image2_url if image2_url else image2,
                             alt="Image 2",
-                            style="height:800px;display: block; margin: auto;")
-        if last_p_before_eighty.next_sibling:
-            last_p_before_eighty.insert_after(img_2)
-        else:
-            last_p_before_eighty.parent.append(img_2)
+                            style="height: 800px;display: block; margin: auto;")
+        h2_tags[-1].insert_before(img_2)
     return str(soup)
 
 @app.post("/integrate-images")
