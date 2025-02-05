@@ -61,17 +61,25 @@ def get_image_url(image_path: str, api_key: str) -> Optional[str]:
     
     return None
 
-def integrate_images(content: str, featured_image: str, image1: str, image2: str, api_key: str) -> str:
+def integrate_images(content: str, featured_image: str, image1: str, image2: str, image3: str, image4: str, api_key: str) -> str:
     if not content:
         return content
     featured_url = get_image_url(featured_image, api_key)
     image1_url = get_image_url(image1, api_key)
     image2_url = get_image_url(image2, api_key)
+    image3_url = get_image_url(image3, api_key)
+    image4_url = get_image_url(image4, api_key)
     soup = BeautifulSoup(content, 'html.parser')
+    text_content = soup.get_text()
+    total_length = len(text_content)
+    thirty_percent_point = int(total_length * 0.3)
+    fifty_percent_point = int(total_length * 0.5)
+    sixty_percent_point = int(total_length * 0.6)
+    eighty_percent_point = int(total_length * 0.8)
     img_featured = soup.new_tag('img', 
                                src=featured_url if featured_url else featured_image,
                                alt="Featured Image", 
-                               style="display: block; margin: auto;")
+                               style="height: 50%")
     first_p = soup.find('p')
     if first_p:
         first_p.insert_before(img_featured)
@@ -80,19 +88,52 @@ def integrate_images(content: str, featured_image: str, image1: str, image2: str
             soup.body.insert(0, img_featured)
         else:
             soup.insert(0, img_featured)
-    h2_tags = soup.find_all('h2')
-    if len(h2_tags) >= 4 and image1:
+    current_length = 0
+    last_p_before_thirty = None
+    last_p_before_fifty = None
+    last_p_before_sixty = None
+    last_p_before_eighty = None
+    for tag in soup.find_all(['p', 'h2']):
+        current_length += len(tag.get_text())
+        
+        if current_length <= thirty_percent_point and tag.name == 'p':
+            last_p_before_thirty = tag
+        
+        if current_length <= fifty_percent_point and tag.name == 'p':
+            last_p_before_fifty = tag
+        
+        if current_length <= sixty_percent_point and tag.name == 'p':
+            last_p_before_sixty = tag
+        
+        if current_length <= eighty_percent_point and tag.name == 'p':
+            last_p_before_eighty = tag
+    if last_p_before_thirty and image3:
+        img_3 = soup.new_tag('img',
+                            src=image3_url if image3_url else image3,
+                            alt="Image 3",
+                            style="height: 50%")
+        last_p_before_thirty.insert_after(img_3)
+    if last_p_before_fifty and image1:
         img_1 = soup.new_tag('img',
                             src=image1_url if image1_url else image1,
                             alt="Image 1",
-                            style="display: block; margin: auto;")
-        h2_tags[3].insert_before(img_1)
-    if len(h2_tags) > 0 and image2:
+                            style="height: 50%")
+        last_p_before_fifty.insert_after(img_1)
+    if last_p_before_sixty and image4:
+        img_4 = soup.new_tag('img',
+                            src=image4_url if image4_url else image4,
+                            alt="Image 4",
+                            style="height: 50%")
+        last_p_before_sixty.insert_after(img_4)
+    if last_p_before_eighty and image2:
         img_2 = soup.new_tag('img',
                             src=image2_url if image2_url else image2,
                             alt="Image 2",
-                            style="display: block; margin: auto;")
-        h2_tags[-1].insert_before(img_2)
+                            style="height: 50%")
+        if last_p_before_eighty.next_sibling:
+            last_p_before_eighty.insert_after(img_2)
+        else:
+            last_p_before_eighty.parent.append(img_2)
     return str(soup)
 
 @app.post("/integrate-images")
@@ -100,19 +141,17 @@ async def integrate_images_endpoint(request: Request):
     try:
         body = await request.json()
         data = body[0] if isinstance(body, list) else body
-        
         content = data.get('Content', '')
         featured_image = data.get('featured image', '')
         image1 = data.get('Image 1', '')
         image2 = data.get('Image 2', '')
-        api_key=data.get('Api_Key','')
-        
-        if not all([content, featured_image, image1,api_key]):
+        image3 = data.get('Image 3', '')
+        image4 = data.get('Image 4', '')
+        api_key = data.get('Api_Key', '')
+        if not all([content, featured_image, image1, image2, image3, image4, api_key]):
             raise HTTPException(status_code=400, detail="Missing required fields")
-        
-        modified_content = integrate_images(content, featured_image, image1, image2,api_key)
+        modified_content = integrate_images(content, featured_image, image1, image2, image3, image4, api_key)
         return {"modified_content": modified_content}
-        
     except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="Invalid JSON")
     except Exception as e:
